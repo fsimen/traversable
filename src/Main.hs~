@@ -1,0 +1,32 @@
+module Traversable where
+import Test.QuickCheck
+import Test.QuickCheck.Checkers
+import Test.QuickCheck.Classes
+
+data Optional a =
+  Nada
+  | Yep a
+
+instance Functor Optional where
+  fmap _ Nada = Nada
+  fmap f (Yep a) = Yep (f a)
+
+instance Foldable Optional where
+  foldr f init Nada = init
+  foldr f init (Yep a) = f a init 
+
+instance Traversable Optional where
+  traverse f Nada = pure Nada
+  traverse f (Yep a) = fmap Yep (f a)
+
+instance (Arbitrary a) => Arbitrary (Optional a) where
+  arbitrary = 
+    frequency [ (1, fmap Yep arbitrary),
+                (1, return Nada)]
+
+type TI = Optional
+
+main = do
+  let trigger = undefined :: TI (Int, Int, [Int])
+  quickBatch (traversable trigger)
+  
